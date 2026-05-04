@@ -56,3 +56,6 @@ dkms.conf
 
 # python venv
 venv/
+
+# build files
+build/
