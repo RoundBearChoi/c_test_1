@@ -1,23 +1,54 @@
 from pathlib import Path
 from typing import Set, Optional
 
+# ========================= CONFIG =========================
+PATH = "."                          # Starting directory (use "." for current folder)
+OUTPUT_FILE = "header_tree.txt"     # Name of the output text file
+MAX_DEPTH = None                    # Maximum depth (None = unlimited, or set e.g. 5)
+SHOW_HIDDEN = False                 # Show hidden folders starting with '.' ?
+
+# Only files with these extensions will be shown (plus ALL directories)
+INCLUDE_EXTENSIONS = {'.h', '.c'}
+
+USE_COLORS = True                   # ← NEW: Enable/disable colors for console output
+# ========================================================
+
+
+# ===================== COLORS (Console only) =====================
+class Colors:
+    RESET = "\033[0m"
+    DIRECTORY = "\033[94m"   # Bright Blue – change this if you prefer another color
+    # Common alternatives:
+    # "\033[96m"  # Cyan
+    # "\033[92m"  # Green
+    # "\033[95m"  # Magenta
+    # "\033[93m"  # Bright Yellow
+# ========================================================
+
+
 def generate_fancy_tree(
-    path: str = ".",
-    output_file: str = "header_tree.txt",
-    ignore: Optional[Set[str]] = None,
-    max_depth: Optional[int] = None,
-    show_hidden: bool = False,
+    path: str = PATH,
+    output_file: str = OUTPUT_FILE,
+    include_extensions: Optional[Set[str]] = None,
+    max_depth: Optional[int] = MAX_DEPTH,
+    show_hidden: bool = SHOW_HIDDEN,
 ):
     """
-    Generate a fancy tree showing ONLY directories and .h files.
-    Prints to console AND writes to file.
+    Generate a fancy tree showing ONLY directories + the file extensions listed in INCLUDE_EXTENSIONS.
+    Directories appear in color in the terminal; the output file remains plain text.
     """
-    if ignore is None:
-        ignore = {
-            '.git', '__pycache__', 'node_modules', '.venv', 'venv', '.env',
-            'dist', 'build', 'CMakeFiles', 'target', '.idea', '.vscode',
-            'out', 'bin', 'obj'
-        }
+    if include_extensions is None:
+        include_extensions = INCLUDE_EXTENSIONS.copy()
+
+    # Normalize extensions to lowercase for matching
+    include_extensions = {ext.lower() for ext in include_extensions}
+
+    # Common junk directories that are always skipped
+    ignore_dirs = {
+        '.git', '__pycache__', 'node_modules', '.venv', 'venv', '.env',
+        'dist', 'build', 'CMakeFiles', 'target', '.idea', '.vscode',
+        'out', 'bin', 'obj'
+    }
 
     path = Path(path).resolve()
 
@@ -32,17 +63,17 @@ def generate_fancy_tree(
         if not current_path.is_dir():
             return
 
-        # Filter: only directories OR .h files
+        # Filter: only directories OR files with allowed extensions
         items = []
         for item in current_path.iterdir():
             name = item.name
 
-            if name in ignore:
+            if name in ignore_dirs:
                 continue
             if name.startswith('.') and not show_hidden:
                 continue
 
-            if item.is_dir() or item.suffix.lower() == ".h":
+            if item.is_dir() or item.suffix.lower() in include_extensions:
                 items.append(item)
 
         items.sort(key=lambda x: x.name.lower())
@@ -51,14 +82,19 @@ def generate_fancy_tree(
             is_last = i == len(items) - 1
             connector = "└── " if is_last else "├── "
 
-            line = f"{prefix}{connector}{item.name}"
+            # === Console output (with color) ===
+            if USE_COLORS and item.is_dir():
+                display_name = f"{Colors.DIRECTORY}{item.name}{Colors.RESET}"
+            else:
+                display_name = item.name
 
-            # Print to console
-            print(line)
-            
-            # Also write to file if requested
+            console_line = f"{prefix}{connector}{display_name}"
+            print(console_line)
+
+            # === File output (always plain text) ===
             if f:
-                f.write(line + "\n")
+                file_line = f"{prefix}{connector}{item.name}"
+                f.write(file_line + "\n")
 
             if item.is_dir():
                 extension = " " if is_last else "│ "
@@ -68,7 +104,10 @@ def generate_fancy_tree(
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(f"Directory Tree for: {path}\n")
         f.write("=" * 80 + "\n")
-        f.write("Showing: Directories + *.h files only\n\n")
+        f.write(f"Showing: Directories + {sorted(include_extensions)} files only\n")
+        if USE_COLORS:
+            f.write("Note: Directories are colored blue in the terminal (plain text here)\n")
+        f.write("\n")
         
         # Start the tree (prints to console + writes to file)
         _tree(path, "", 0, f)
@@ -78,10 +117,4 @@ def generate_fancy_tree(
 
 # ====================== USAGE ======================
 if __name__ == "__main__":
-    # Run this — it will print the tree to your terminal AND save it to file
     generate_fancy_tree()
-
-    # You can also customize it:
-    # generate_fancy_tree(max_depth=4)
-    # generate_fancy_tree(output_file="my_project_headers.txt")
-    # generate_fancy_tree(show_hidden=True)   # if you want to see hidden folders

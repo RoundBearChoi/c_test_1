@@ -1,5 +1,9 @@
 Directory Tree for: /home/rbwindows/c_test_1/src
 ================================================================================
-Showing: Directories + *.h files only
+Showing: Directories + ['.c', '.h'] files only
+Note: Directories are colored blue in the terminal (plain text here)
 
+├── example.c
+├── example.h
+├── hello.c
 └── some_folder
