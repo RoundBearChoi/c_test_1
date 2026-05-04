@@ -2,8 +2,8 @@
 #include "example.h"
 
 int main(void) {
-    // printf("Hello, World!\n");
-    int result = add(10, 20);
-    printf("10 + 20 = %d\n", result);
+    printf("Hello, World!\n");
+    int result = add(33, 55);
+    printf("%d \n", result);
     return 0;
 }
