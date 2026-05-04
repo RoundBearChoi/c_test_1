@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 project(raylib_basic C)
 
 # ================================================
-# Fix for the "Default build type is not set" warning
-# + forces Release by default (recommended for raylib)
+# Release by default (recommended for raylib)
 # ================================================
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
