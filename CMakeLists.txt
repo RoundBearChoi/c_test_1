@@ -6,14 +6,23 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Build the reusable function as a static library
-add_library(add_lib STATIC src/example.c)
+# ──────────────────────────────────────────────────────────────
+# AUTOMATICALLY find ALL .c files for the library
+# ──────────────────────────────────────────────────────────────
+file(GLOB_RECURSE ADD_LIB_SOURCES CONFIGURE_DEPENDS
+    "src/*.c"          # All .c files in src/ and any subdirectories
+)
 
-# Make the header available to anything that links to the library
+add_library(add_lib STATIC ${ADD_LIB_SOURCES})
+
+# Make headers available
 target_include_directories(add_lib PUBLIC src)
+# ──────────────────────────────────────────────────────────────
 
-# Build the main executable
-add_executable(hello src/hello.c)
+file(GLOB_RECURSE HELLO_SOURCES CONFIGURE_DEPENDS
+    "src/hello.c"
+)
 
-# Link the library to the executable
+add_executable(hello ${HELLO_SOURCES})
+
 target_link_libraries(hello PRIVATE add_lib)
